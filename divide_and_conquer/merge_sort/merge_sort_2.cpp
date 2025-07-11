@@ -2,7 +2,7 @@
 #include <bits/stdc++.h>
 
 using namespace std;
-
+int inverses = 0;
 
 void merge(vector<int>& arr, int low, int mid, int high);
 
@@ -33,36 +33,35 @@ void merge(vector<int>& arr, int low, int mid, int high){
   vector<int> b(size);
 
   while (i<= mid && j <= high){
-    if(arr[i] < arr[j]){
-      b[k] = arr[i];
+    if(arr[i] <= arr[j]){
+      b[k-low] = arr[i];
       i++;
     }
     else {
-      b[k] = arr[j];
+      b[k-low] = arr[j];
       j++;
+      inverses += mid - i + 1;
     }
     k++;
   }
 
   if (i > mid) {
     for(int l=j; l<=high; l++){
-      b[k] = arr[l];
+      b[k-low] = arr[l];
       k++;
     }
   }
 
   if (j > high) {
     for(int l=i; l<= mid; l++){
-      b[k] = arr[l];
+      b[k-low] = arr[l];
       k++;
     }
   }
 
   for(int l=low; l<=high; l++){
-    arr[l] = b[l];
+    arr[l] = b[l-low];
   }
-
-
 }
 
 
@@ -74,7 +73,7 @@ int main(){
 
   mergeSort(arr, 0, arr.size()-1);
   cout << "Vector after merge sort : ";
-  printVector(arr);
-
+  printVector(arr); 
+  cout << "Inverse Count : " << inverses << endl;
 }
 
