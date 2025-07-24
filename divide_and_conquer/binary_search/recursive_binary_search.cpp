@@ -23,7 +23,6 @@ int recursiveBS(vector<int>& a, int low, int high, int x){
         else
             return mid;
     }
-    
 }
 
 int main() {
