@@ -58,7 +58,6 @@ int missingNumber(vector<int> &a){
 }
 
 int missingNumber2(vector<int> &a){
-    sort(a.begin(), a.end());
     auto n = a.size();
     
     int reqSum = n*(n+1)/2;
