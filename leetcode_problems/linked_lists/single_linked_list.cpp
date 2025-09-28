@@ -35,6 +35,8 @@ Node* convertArrayToSLL(vector<int> &a){
 }
 
 int lengthOfLL(Node* head){
+    if(head == nullptr)
+        return 0;
     Node* mover = head;
     int cnt = 1;
     while(mover->next != nullptr){
@@ -45,8 +47,10 @@ int lengthOfLL(Node* head){
 }
 
 bool checkIfPresent(Node* head, int target){
+    if(head == nullptr)
+        return false;
     Node* mover = head;
-    while(mover->next != nullptr){
+    while(mover != nullptr){
         if(mover->data == target)
             return true;
         mover = mover->next;
