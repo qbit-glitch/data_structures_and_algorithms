@@ -44,6 +44,15 @@ int lengthOfLL(Node* head){
     return cnt;
 }
 
+bool checkIfPresent(Node* head, int target){
+    Node* mover = head;
+    while(mover->next != nullptr){
+        if(mover->data == target)
+            return true;
+        mover = mover->next;
+    }
+    return false;
+}
 
 
 int main(){
@@ -58,4 +67,6 @@ int main(){
     cout << a2L_head->next->data << endl;
 
     cout << lengthOfLL(a2L_head) << endl;
+
+    cout << checkIfPresent(a2L_head, 20) << endl;
 }
