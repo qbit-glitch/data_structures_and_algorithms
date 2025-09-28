@@ -23,6 +23,27 @@ public:
     }
 };
 
+Node* convertArrayToSLL(vector<int> &a){
+    Node* head = new Node(a[0]);
+    Node* mover = head;
+    for(int i=1; i<a.size(); i++){
+        Node* temp = new Node(a[i]);
+        mover->next = temp;
+        mover = temp;
+    }
+    return head;
+}
+
+int lengthOfLL(Node* head){
+    Node* mover = head;
+    int cnt = 1;
+    while(mover->next != nullptr){
+        cnt++;
+        mover = mover->next;
+    }
+    return cnt;
+}
+
 
 
 int main(){
@@ -31,4 +52,10 @@ int main(){
     Node* node2 = new Node(18, node1);
     cout << node1->data << endl;
     cout << node2->data << " " << node2->next->data << endl;
+
+    vector<int> a {5,3,8,1,0,7,10};
+    Node* a2L_head = convertArrayToSLL(a);
+    cout << a2L_head->next->data << endl;
+
+    cout << lengthOfLL(a2L_head) << endl;
 }
