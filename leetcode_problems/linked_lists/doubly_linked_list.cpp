@@ -114,9 +114,60 @@ void deleteGivenNode(Node* node){
 
 }
 
+
+Node* insertBeforeHead(Node* head, int val){
+    if(head == NULL)    return new Node(val);
+    Node* newNode = new Node(val, head, nullptr);
+    head->prev = newNode;
+    head = newNode;
+    return head;
+}
+
+Node* insertBeforeTail(Node* head, int val){
+    if(head == NULL) return new Node(val);
+    Node* temp = head;
+    while(temp -> next != NULL){
+        temp = temp -> next;
+    }
+    Node* prev = temp->prev;
+    Node* newNode = new Node(val, temp, prev);
+
+    prev -> next = newNode;
+    temp-> prev = newNode;
+
+    return head;
+}
+
+Node* insertBeforeKthPos(Node* head, int val, int k){
+    if(k==1)
+        return insertBeforeHead(head, val);
+    int cnt=0;
+    Node* temp = head;
+    while(temp != NULL){
+        cnt++;
+        if(cnt == k)    break;
+        temp = temp -> next;
+    }
+    Node* prev = temp->prev;
+    Node* newNode = new Node(val, temp, prev);
+    prev->next = newNode;
+    temp->prev = newNode;
+    return head;
+}
+
+void insertBeforeAGivenNode(Node* node, int val){
+    Node* prev = node->prev;
+    Node* newNode = new Node(val, node, prev);
+    prev -> next = newNode;
+    node-> prev = newNode;
+}
+
+
+
 int main(){
     vector<int> a{1,5,2,7,10,11,90,18};
     Node* head = convertArrayToDLL(a);
-    deleteGivenNode(head->next->next);
+    // head = insertBeforeKthPos(head, 100, 8);
+    insertBeforeAGivenNode(head->next->next, 10000);
     printDLL(head);
 }
