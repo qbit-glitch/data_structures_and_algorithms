@@ -44,10 +44,79 @@ Node* convertArrayToDLL(vector<int> &a){
     return head;
 }
 
+Node* deleteHead(Node* head){
+    if (head == NULL)
+        return NULL;
+    Node* temp = head;
+    head = head -> next;
+    temp -> next = nullptr;
+    head -> prev = nullptr;
+    delete temp;
+    return head;
+}
 
+Node* deleteTail(Node* head){
+    if(head == NULL || head->next == NULL)    return NULL;
+    Node* temp = head;
+    while(temp -> next != NULL){
+        temp = temp -> next;
+    }
+    Node* prev = temp -> prev;
+    prev -> next = NULL;
+    temp -> prev = NULL;
+    delete temp;
+    return head;
+}
+
+Node* deleteKthElement(Node* head, int k){
+    int cnt = 0;
+    Node* temp = head;
+    while(temp != NULL){
+        cnt++;
+        if(cnt == k)
+            break;
+        temp =  temp->next;
+    }
+
+    Node* prev = temp->prev;
+    Node* front = temp->next;
+
+    if(prev == NULL and front == NULL)
+        return NULL;
+    else if(prev == NULL)
+        return deleteHead(head);
+    else if(front == NULL)
+        return deleteTail(head);
+    else{
+        prev->next = front;
+        front->prev = prev;
+        temp->prev = nullptr;
+        temp->next = nullptr;
+        delete temp;
+        return head;
+    }
+}
+
+void deleteGivenNode(Node* node){
+    Node* prev = node->prev;
+    Node* front = node->next;
+    if(front == NULL){
+        prev->next = NULL;
+        node->prev = NULL;
+        delete node;
+        return;
+    }
+    
+    prev->next = front;
+    front->prev = prev;
+    node->prev = nullptr;
+    node->next = nullptr;
+
+}
 
 int main(){
-    vector<int> a{1,5,2,7,10,11};
+    vector<int> a{1,5,2,7,10,11,90,18};
     Node* head = convertArrayToDLL(a);
+    deleteGivenNode(head->next->next);
     printDLL(head);
 }
