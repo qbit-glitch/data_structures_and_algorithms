@@ -37,7 +37,6 @@ int priority(char c){
         return -1;
 }
 
-
 string infixToPrefix(string &s) {
     s = reverseTheString(s);
     int i = 0;
@@ -57,9 +56,18 @@ string infixToPrefix(string &s) {
             st.pop();
         }
         else {
-            while(!st.empty() and (priority(s[i]) < priority(st.top()))){
-                ans += st.top();
-                st.pop();
+            if(s[i] == '^'){
+                while(!st.empty() and (priority(s[i]) <= priority(st.top()))){
+                    ans += st.top();
+                    st.pop();
+                }
+            }
+            else {
+                while(!st.empty() and (priority(s[i]) < priority(st.top()))){
+                    ans += st.top();
+                    st.pop();
+                }
+                
             }
             st.push(s[i]);
         }
@@ -75,6 +83,7 @@ string infixToPrefix(string &s) {
 
     return ans;
 }
+
 
 int main(){
     string s = "(a-b/c)*(a/k-l)";
