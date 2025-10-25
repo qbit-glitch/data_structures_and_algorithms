@@ -74,6 +74,7 @@ public:
     
     void put(int key, int value) {
         if(mpp.find(key) != mpp.end()){
+            // cout << key << " found !" << endl;
             Node* node = mpp[key];
             node->val = value;
 
@@ -82,28 +83,31 @@ public:
         }
         else {
             if(mpp.size() == capacity){
+                // cout << "Capacity Reached ... Deleting 1 node" << endl;
                 Node* temp = tail->prev;
                 mpp.erase(temp->key);
                 
                 temp = deleteNode(temp);
                 delete temp;
-                
-                capacity--;
+
             }
 
             Node* node = new Node(key, value);
             mpp[key] = node;
             insertAfterHead(node, head);
-            capacity++;
+            
+            // printf("Capacity: %d\n", capacity);
         }
-        printHashMap(mpp);
+        
     }
 
     void printCache(){
-        for(auto &i: mpp){
-            Node* node = i.second;
-            cout << node->key << "," << node->val << endl;
+        Node* temp = head;
+        while(temp != nullptr){
+            cout << temp->key << "," << temp->val << "   ";
+            temp = temp->next;
         }
+        cout << endl;
     }
 };
 
@@ -113,11 +117,12 @@ int main(){
     // Your LRUCache object will be instantiated and called as such:
     int capacity = 2;
     LRUCache* obj = new LRUCache(capacity);
-    int param_1 = obj->get(2);
+
     obj->put(1,1);
     obj->put(2,2);
-    // cout << obj->get(1) << endl;
     obj->put(3,3);
-    // cout << obj->get(2) << endl;
-    // obj->printCache();
+    int p1 = obj->get(1);
+    obj->put(4,4);
+    obj->put(2,9);
+    obj->printCache();
 }
