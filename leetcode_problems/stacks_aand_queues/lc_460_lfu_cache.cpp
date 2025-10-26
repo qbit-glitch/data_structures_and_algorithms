@@ -7,139 +7,145 @@
 using namespace std;
 
 struct Node{
-    int key, val;
-    Node* next;
+    int key, val, cnt;
     Node* prev;
+    Node* next;
 
-    Node(int key1, int val1){
-        key = key1;
-        val = val1;
+    Node(int _key, int _val){
+        key = _key;
+        val = _val;
+        cnt = 1;
         prev = nullptr;
         next = nullptr;
     }
 };
 
-class LRUCache {
-private:
-    int capacity;
-    Node* head = new Node(-1,-1);
-    Node* tail = new Node(-1,-1);
-    unordered_map<int, Node*> mpp;
+struct List{
+    Node* head;
+    Node* tail;
+    int size;
 
-public:
-    LRUCache(int capacity1) {
-        capacity = capacity1;
-        mpp.clear();
-        head->next = tail;
+    List(){
+        head = new Node(-1,-1);
+        tail = new Node(-1,-1);
+
+        head ->next = tail;
         tail->prev = head;
+
+        size = 0;
     }
 
-    
-    void deleteNode(Node* node){
-        Node* nextNode = node->next;
-        Node* prevNode = node->prev;
-
-        nextNode->prev = prevNode;
-        prevNode->next = nextNode;
-    }
-
-    void insertAfterHead(Node* node){
+    void addFront(Node* node){
         Node* nodeAfterHead = head->next;
         head->next = node;
         node->prev = head;
 
         node->next = nodeAfterHead;
         nodeAfterHead->prev = node;
+        
+        size++;
     }
 
-    int get(int key) {
-        if(mpp.find(key) == mpp.end())
-            return -1;
-        Node* node = mpp[key];
-        
-        deleteNode(node);
-        insertAfterHead(node);
-        
-        return node->val;
-    }
-    
-    void put(int key, int value) {
-        if(mpp.find(key) != mpp.end()){
-            Node* node = mpp[key];
-            node->val = value;
+    void deleteNode(Node* node){
+        Node* nextNode = node->next;
+        Node* prevNode = node->prev;
 
-            deleteNode(node);
-            insertAfterHead(node);
-        }
-        else {
-            if(mpp.size() == capacity){
-                Node* temp = tail->prev;
-                mpp.erase(temp->key);
-                
-                deleteNode(temp);
-                delete temp;
+        nextNode->prev = prevNode;
+        prevNode->next = nextNode;
 
-            }
-
-            Node* node = new Node(key, value);
-            mpp[key] = node;
-            insertAfterHead(node);
-            
-        }
-        
-    }
-
-    void printCache(){
-        Node* temp = head;
-        while(temp != nullptr){
-            cout << temp->key << "," << temp->val << "   ";
-            temp = temp->next;
-        }
-        cout << endl;
+        size--;
     }
 };
 
-class LFUCache {
-private:
-    unordered_map<int, LRUCache> freqListCache;
+class LFUCache{
+    unordered_map<int, List*> freqListMap;
     unordered_map<int, Node*> keyNode;
-    unordered_map<Node*, int> freqCnt;
-    int minFreq, capacity;
 
-public:
-    LFUCache(int capacity1) {
-        capacity = capacity1;
-        freqListCache.clear();
-        keyNode.clear();        
-    }
-    
-    int get(int key) {
-        if(keyNode.find(key) == keyNode.end())
-            return -1;
-        Node* node = keyNode[key];
-        int freq = freqCnt[node];
-        
-        freqListCache[freq].deleteNode(node);
-        
-        freq++;
-        freqListCache[freq].insertAfterHead(node);
-        freqCnt[node] = freq;
+    int maxCacheSize, curSize, minFreq;
 
-        return node->val;
+    public:
+    LFUCache(int capacity){
+        maxCacheSize = capacity;
+        curSize=0;
+        minFreq = 0;
     }
-    
-    void put(int key, int value) {
+
+    void updateListFreq(Node* node){
+        keyNode.erase(node->key);
+        freqListMap[node->cnt]->deleteNode(node);
+
+        if(node->cnt == minFreq and freqListMap[node->cnt]->size == 0)
+            minFreq++;
+
+        List* nextHigherFreqList = new List();
+        if(freqListMap.find(node->cnt+1) != freqListMap.end())
+            nextHigherFreqList = freqListMap[node->cnt+1];
+
+        node->cnt += 1;
+        nextHigherFreqList->addFront(node);
+
+        keyNode[node->key] = node;
+        freqListMap[node->cnt] = nextHigherFreqList;
+    }
+
+    int get(int key){
+        if(keyNode.find(key) != keyNode.end()){
+            Node* node = keyNode[key];
+            updateListFreq(node);
+
+            return node->val;
+        }
+        return -1;
+    }
+
+    void put(int key, int value){
+        if(maxCacheSize == 0)
+            return;
+        
         if(keyNode.find(key) != keyNode.end()){
             Node* node = keyNode[key];
             node->val = value;
 
-            freqListCache[freqCnt[node]++].deleteNode(node);
-            freqListCache[freqCnt[node]].insertAfterHead(node);            
+            updateListFreq(node);
         }
         else {
-            if(keyNode.size() == capacity){
-                
+            if(maxCacheSize == curSize){
+                List* list = freqListMap[minFreq];
+                keyNode.erase(list->tail->prev->key);
+                freqListMap[minFreq]->deleteNode(list->tail->prev);
+                curSize--;
             }
+            curSize++;
+            minFreq = 1;
+            
+            List* listFreq = new List();
+            if(freqListMap.find(minFreq) != freqListMap.end())
+                listFreq = freqListMap[minFreq];
+            
+            Node* node = new Node(key, value);
+            listFreq->addFront(node);
+            keyNode[key] = node;
+            freqListMap[minFreq] = listFreq;
         }
     }
 };
+
+int main(){
+    int capacity = 2;
+    LFUCache* obj = new LFUCache(capacity);
+    
+    obj->put(1,1);
+    obj->put(2,2);
+    cout << obj->get(1) << endl;
+
+    obj->put(3,3);
+    cout << obj->get(2) << endl;
+    cout << obj->get(3) << endl;
+
+    obj->put(4,4);
+    cout << obj->get(1) << endl;
+    cout << obj->get(2) << endl;
+    cout << obj->get(3) << endl;
+    cout << obj->get(4) << endl;
+
+}
