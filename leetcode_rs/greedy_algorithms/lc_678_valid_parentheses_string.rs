@@ -29,7 +29,35 @@ fn check_valid_string(s: String) -> bool{
     return fn_rec(s, ind, cnt);
 }
 
+
+
+// Optimal Solution
+fn check_valid_string_optimal(s: String) -> bool {
+    let mut min: i32 = 0;
+    let mut max: i32 = 0;
+
+    for ch in s.chars(){
+        if ch == '(' {
+            min += 1;
+            max += 1;
+        } else if ch == ')' {
+            min -=1; max-=1;
+        } else {
+            min -= 1; max += 1;
+        }
+
+        if min < 0 {
+            min = 0;
+        }
+        if max < 0 {
+            return false;
+        }
+    }
+    return min == 0;
+}
+
+
 fn main(){
     let s: String = ")()((**)".to_string();
-    println!("{}", check_valid_string(s.clone()));
+    println!("{}", check_valid_string_optimal(s.clone()));
 }
