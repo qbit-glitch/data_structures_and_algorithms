@@ -111,4 +111,64 @@ This will print each element of the pairs. The iter() method provides an iterato
 Some Common Curiosity Questions
 ===
 
+## 6. How to iterate through a vector in Rust ?
 
+In Rust, iterating over a vector can be done in several ways, with the most common and recommended method being the use of a for loop with the vector's iter() method. This approach directly iterates over the elements of the vector, yielding references to each element, which is both more efficient and clearer in intent than using index-based loops.
+For example:
+
+```rust
+let nums = vec![1, 2, 3];
+for num in &nums {
+    println!("{}", num);
+}
+```
+
+This method avoids unnecessary bounds checking that occurs when indexing into the vector, such as in a C-style loop using 0..nums.len().
+The &nums syntax explicitly borrows the vector, and num is of type &i32, a reference to each element, which println! automatically dereferences.
+
+To access both the index and the value during iteration, use the .enumerate() method on the iterator:
+
+```rust
+let nums = vec![10, 20, 30, 40, 50];
+for (index, value) in nums.iter().enumerate() {
+    println!("Index: {} Value: {}", index, value);
+}
+```
+This produces tuples containing the index (of type usize) and a reference to the element.
+
+For mutable iteration—where you want to modify the elements—use .iter_mut():
+
+```rust
+let mut nums = vec![1, 2, 3];
+for num in nums.iter_mut() {
+    *num *= 2;
+}
+```
+
+Here, *num dereferences the mutable reference to allow modification of the original value.
+
+Additionally, iterators are not limited to for loops; they can be used with methods like .next(), .collect(), and .map() for more functional programming patterns.
+
+<!-- end_slide -->
+
+Some Curiosity Questions
+===
+
+# 7. How to do indexing in strings in Rust ? 
+
+Rust does not support direct indexing of strings using integer indices because strings are stored as UTF-8 encoded byte sequences, and characters can occupy one to four bytes depending on the Unicode code point.
+
+This makes indexing ambiguous, as accessing a byte index might split a multi-byte character, resulting in invalid UTF-8.
+
+To access individual characters, use the chars() method, which returns an iterator over Unicode scalar values (code points).
+
+To retrieve the nth character, use .nth(i) on the iterator, though this requires traversing the string up to the ith character, resulting in O(n) time complexity.
+For example:
+
+```rust
+let s = "hello";
+let c = s.chars().nth(1).unwrap(); // Returns 'e'
+```
+
+For ASCII-only strings where byte indexing is safe, you can use as_bytes() to get a byte slice and index into it, then convert the byte to a character.
+ However, this approach is generally unsafe for non-ASCII text

@@ -171,3 +171,27 @@ Additionally, you can use range to iterate over strings, maps, and channels, mak
 
 <!-- end_slide -->
 
+Some Curiosity Questions
+===
+
+## 5. How initialize an array of a fixed capacity in Go
+
+In Go, arrays have a fixed size determined at compile time, so you cannot initialize an array with a "particular capacity" in the same way as a slice. However, you can create a slice with a specified length and capacity using the make function. To initialize an empty slice with a specific capacity, use `make([]Type, 0, capacity)`, where Type is the element type and capacity is the desired capacity.
+
+For example, `make([]int, 0, 10)` creates an empty slice of integers with a capacity of 10. This slice has a length of 0 and can grow up to the specified capacity without reallocation. While []Type{} creates an empty slice with zero length and zero capacity, make allows explicit control over the initial capacity, which is useful when you know the approximate number of elements you will add.
+
+
+```go
+mySlice1 := make([]int, 0)
+mySlice2 := []int{}
+fmt.Println("mySlice1", cap(mySlice1))
+fmt.Println("mySlice2", cap(mySlice2))
+```
+Output:
+
+```go
+mySlice1 0
+mySlice2 0
+```
+
+Both slices have 0 capacity which implies both slices have 0 length (cannot be greater than the capacity) which implies both slices have no elements. This means the 2 slices are identical in every aspect.
