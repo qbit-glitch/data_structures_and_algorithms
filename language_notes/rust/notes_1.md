@@ -172,3 +172,25 @@ let c = s.chars().nth(1).unwrap(); // Returns 'e'
 
 For ASCII-only strings where byte indexing is safe, you can use as_bytes() to get a byte slice and index into it, then convert the byte to a character.
  However, this approach is generally unsafe for non-ASCII text
+
+<!-- end_slide -->
+
+Some Curiosity Questions
+===
+
+## 8. INT_MAX alternative in Golang
+
+In Rust, there is no INT_MAX constant like in C or C++. Instead, each integer type has its own MAX constant. To get the maximum value for a specific integer type, use the type's MAX associated constant directly, such as `i32::MAX`, `u64::MAX`, etc. 
+
+For example:
+
+The maximum value for a signed 32-bit integer is `i32::MAX` which equals 2,147,483,647.
+
+The maximum value for an unsigned 64-bit integer is `u64::MAX` which equals 18,446,744,073,709,551,615.
+
+It is recommended to use the type-specific MAX constants (e.g., u32::MAX) rather than the older std::u32::MAX form, as the latter is deprecated.
+
+The std:: prefix is no longer the intended way to access these constants.
+
+<!-- end_slide -->
+

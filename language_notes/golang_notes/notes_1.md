@@ -195,3 +195,59 @@ mySlice2 0
 ```
 
 Both slices have 0 capacity which implies both slices have 0 length (cannot be greater than the capacity) which implies both slices have no elements. This means the 2 slices are identical in every aspect.
+
+<!-- end_slide -->
+
+Some Curiosity Questions
+===
+
+## 6. How to find minimum of two numbers in Golang ?
+
+Starting with Go 1.18, you can write a generic min function which is just as efficient at run time as the hand-coded single-type version, but works with any type with < and > operators:
+
+```go
+func min[T constraints.Ordered](a, b T) T {
+    if a < b {
+        return a
+    }
+    return b
+}
+
+func main() {
+    fmt.Println(min(1, 2))
+    fmt.Println(min(1.5, 2.5))
+    fmt.Println(min("Hello", "世界"))
+}
+```
+There's been discussion of updating the stdlib to add generic versions of existing functions, but if that happens it won't be until a later version.
+
+math.Min(2, 3) happened to work because numeric constants in Go are untyped. Beware of treating float64s as a universal number type in general, though, since integers above 2^53 will get rounded if converted to float64.
+
+<!-- end_slide -->
+
+Some Curiosity Questions
+===
+
+INT_MAX alternative in Golang
+===
+
+In Go, the maximum value for the int type can be obtained using the math.MaxInt constant, which was introduced in Go 1.17.
+This constant provides the platform-specific maximum value for the int type, which is either $2^{31} - 1$ on 32-bit systems or $2^{63} - 1$ on 64-bit systems.
+
+To use it, import the math package and reference math.MaxInt directly:
+
+```go
+package main
+
+import (
+    "fmt"
+    "math"
+)
+
+func main() {
+    fmt.Println("Max int:", math.MaxInt) // Output: 9223372036854775807 on 64-bit systems
+}
+```
+Prior to Go 1.17, developers used expressions like int(^uint(0) >> 1) to compute MaxInt 
+ , but this is now superseded by the standard math.MaxInt constant.
+ Similarly, math.MinInt provides the minimum value for int.
