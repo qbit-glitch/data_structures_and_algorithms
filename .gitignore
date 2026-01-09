@@ -1,2 +1,15 @@
 bin/
 venv1/
+
+book
+advanced/main.test
+advanced/mem.pprof
+mdbook_summary.go
+summary.txt
+topics.txt
+node_modules
+cert.pem
+key.pem
+.env
+binaries/
+

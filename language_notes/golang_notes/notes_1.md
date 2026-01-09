@@ -251,3 +251,22 @@ func main() {
 Prior to Go 1.17, developers used expressions like int(^uint(0) >> 1) to compute MaxInt 
  , but this is now superseded by the standard math.MaxInt constant.
  Similarly, math.MinInt provides the minimum value for int.
+
+### How to sort an array of Integers ?
+
+To sort an array in Go, you must convert the array to a slice because the standard sort package functions operate on slices. Once converted, you can use functions like sort.Ints for integers, sort.Strings for strings, or sort.Float64s for floating-point numbers.
+
+For example, to sort an array of integers:
+```go
+package main
+import (
+    "fmt"
+    "sort"
+)
+func main() {
+    arr := int{3, 1, 4, 5, 2}
+    sort.Ints(arr[:]) // Convert array to slice using arr[:]
+    fmt.Println(arr) // Output: [1 2 3 4 5]
+}
+```
+
