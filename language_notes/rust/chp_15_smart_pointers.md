@@ -202,4 +202,247 @@ We can use types that use the interior mutability pattern only when we can ensur
 There are situations in which it would be useful for a value to mutate itself in its methods but appear immutable to other code. Code outside the value's method would not be able to mutate the value. Using `RefCell<T>` is one way to get the ability to have interior mutability, but `RefCell<T>` doesn't get around the borrowing rules completely : The borrow checker in the compiler allows this interior mutability, and borrowing rules are checked at runtime instead. If we violate the rules, we'll get a `panic!` instead of a compiler error.
 
 
+#### Eg: Testing with Mock Objects
 
+Sometimes during testing a programmer will use a type in place of another type, in order to observe particular behaviour and assert that it's implemented correctly. This placeholder type is called a test double. Test doubles stand in for other types when we are running tests. Mock objects are specific types of test doubles that record what happens during a test so that you can assert that the correct actions took place.
+
+eg: We need a mock object that, instead of sending an email or text message when we call send, will keep track of the messages it's told to send. 
+
+```rust
+pub trait Messenger {
+    fn send(&self, msg: &str);
+}
+
+pub struct LimitTracker<'a, T: Messenger> 
+// public struct LimitTracker with lifetime 'a and type T constrained to implement the Messenger trait
+{         
+    messenger: &'a T,
+    value: usize,
+    max: usize,
+}
+
+impl<'a, T> LimitTracker<'a, T>  
+// impl of lifetime a and type T for LimitTracker of lifetime a and type T. Meaning: 
+// we are declaring a lifetime 'a and a generic type T, for the struct LimitTracker using that lifetime and type
+// we are implementing methods for LimitTracker that is parameterized by a lifetime 'a and a generic type T.
+
+where 
+    T: Messenger, 
+{
+    pub fn new(messenger: &'a T, max: usize) -> LimitTracker<'a, T> {
+        LimitTracker{
+            messenger,
+            value: 0,
+            max,
+        }
+    }       
+
+    pub fn set_value(&mut self, value: usize) {
+        self.value = value;
+
+        let percentage_of_max = self.value as f64 / self.max as f64;
+
+        if percentage_of_max >= 1.0 {
+            self.messenger.send("Error: You are over your quota!");
+        } else if percentage_of_max >= 0.9 {
+            self.messenger.send("Urgent Warning: You have used up 90% of your quota!");
+        } else if percentage_of_max >= 0.75 {
+            self.messenger.send("Warning: You have used up over 75% of your quota!");
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    struct MockMessenger {
+        sent_messages: Vec<String>,
+    }
+
+    impl MockMessenger {
+        fn new() -> MockMessenger {
+            MockMessenger{
+                sent_messages: vec![],
+            }
+        }
+    }
+
+    impl Messenger for MockMessenger {
+        fn send(&self, message: &str) {
+            self.sent_messages.push(String::from(message));
+        }
+    }
+
+    #[test]
+    fn it_sends_an_over_75_percent_warning_message(){
+        let mock_messenger = MockMessenger::new();
+        let mut limit_tracker = LimitTracker::new(&mock_messenger, 100);
+
+        limit_tracker.set_value(80);
+
+        assert_eq!(mock_messenger.sent_messages.len(), 1);
+    }
+}
+```
+
+One important part of this code is that the Messenger trait has one method called send that takes an immutable reference to self and the text of the message. This trait is the interface our mock object needs to implement so that the mock can be used in the same way a rea object is. We need a mock object that instead of sending an email or text message when we call send, will only keep track of the messages it's told to send. We can create a new instance of the mock object, create a LimitTracker that uses the mock object, call the set_value method on LimitTracker and then check that the mock object has the messages we expect. But on doing so, the borrow checker won't allow it.
+
+```bash
+$ cargo test
+   Compiling limit-tracker v0.1.0 (file:///projects/limit-tracker)
+error[E0596]: cannot borrow `self.sent_messages` as mutable, as it is behind a `&` reference
+  --> src/lib.rs:58:13
+   |
+58 |             self.sent_messages.push(String::from(message));
+   |             ^^^^^^^^^^^^^^^^^^ `self` is a `&` reference, so the data it refers to cannot be borrowed as mutable
+   |
+help: consider changing this to be a mutable reference in the `impl` method and the `trait` definition
+   |
+ 2 ~     fn send(&mut self, msg: &str);
+ 3 | }
+...
+56 |     impl Messenger for MockMessenger {
+57 ~         fn send(&mut self, message: &str) {
+   |
+
+For more information about this error, try `rustc --explain E0596`.
+error: could not compile `limit-tracker` (lib test) due to 1 previous error
+```
+
+We can't modify the `MockMessenger` to keep track of the messages, because the send method takes an immutable reference to `self`. This is a situation in which interior mutability can help. We'll store the `sent_messages` within a `RefCell<T>`, and then the `send` method will be able to modify `sent_messages` to store the messages we've seen.
+
+```rust
+#[cfg(test)]
+mod tests {
+    // use everything from the parent module. 
+    // super refers to the parent module and * means import everything from it.
+    // bring all items from the parent module into scope
+    use super::*;
+    
+    // bring RefCell from std::cell into scope
+    // std -> standard library | cell -> Module | RefCell -> Type
+    // we are importing RefCell from the standard library's cell module
+    use std::cell::RefCell;
+    
+
+    struct MockMessenger{
+        sent_messages: RefCell<Vec<String>>,
+    }
+
+    impl MockMessenger{
+        fn new() -> MockMessenger {
+            MockMessenger{
+                sent_messages: RefCell::new(vec![]),
+            }
+        }
+    }
+
+    impl Messenger for MockMessenger{
+        fn send(&self, message: &str){
+            self.sent_messages.borrow_mut().push(String::from(message));
+        }
+    }
+
+    #[test]
+    fn it_sends_an_over_75_percent_warning_message(){
+        let mock_messenger = MockMessenger::new();
+        let mut limit_tracker = LimitTracker::new(&mock_messenger, 100);
+
+        limit_tracker.set_value(80);
+
+        assert_eq!(mock_messenger.sent_messages.borrow().len(),1);
+    }
+}
+
+// RefCell<T> : - Reference Cell holding type T 
+//              - RefCell is a smart pointer that allows interior mutability, meaning we can mutate data even when the RefCell itseld is immutable
+```
+
+The `sent_messages` field is now of type `RefCell<Vec<String>>` instead of `Vec<String>`. In the `new` function, we create a new `RefCell<Vec<String>>` instance around the empty vector. We call `borrow_mut` on the `RefCel<Vec<String>>` in `self.sent_messages` to get a mutable refernce to the value inside the `RefCell<Vec<String>>` which is the vector. Then we can call `push` on the mutable reference to the vector to keep track of the messages sent during the test.
+
+#### Tracking Borrows at Runtime
+
+When creating immutable and mutable references, we use the `&` and `&mut` syntax respectively. With `RefCell<T>`, we use the `borrow` and `borrow_mut` methods which are part of the safe API that belongs to the `RefCell<T>`. The `borrow` method returns the smart pointer type `Ref<T>`, and `borrow_mut` returns the smart pointer type `RefMut<T>`. Both types implement `Deref`, so we can treat them like regular references.
+
+The `RefCell<T>` keeps track of many `Ref<T>` and `RefMut<T>` smart pointers are currently active. Every time we call borrow, the `RefCell<T>` increases its count of how many immutable borrows gors down by 1. Just like the compile-time borrowing rules, `RefCell<T>` lets us have many immutable borrows or one mutable borrow at any point in time. If we try to violate these rules, rather than getting a compiler error as we would with references, the implementation of `RefCell<T>` will panic at runtime.
+
+eg:
+```rust
+impl Messenger for MockMessenger{
+    fn send(&self, message: &str) {
+        let mut one_borrow = self.sent_messages.borrow_mut();
+        let mut two_borrow = self.sent_messages.borrow_mut();
+
+        one_borrow.push(String::from(message));
+        two_borrow.push(String::from(message));
+    }
+}
+```
+
+Output:
+```bash
+$ cargo test
+   Compiling limit-tracker v0.1.0 (file:///projects/limit-tracker)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.91s
+     Running unittests src/lib.rs (target/debug/deps/limit_tracker-e599811fa246dbde)
+
+running 1 test
+test tests::it_sends_an_over_75_percent_warning_message ... FAILED
+
+failures:
+
+---- tests::it_sends_an_over_75_percent_warning_message stdout ----
+
+thread 'tests::it_sends_an_over_75_percent_warning_message' panicked at src/lib.rs:60:53:
+RefCell already borrowed
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    tests::it_sends_an_over_75_percent_warning_message
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--lib`
+```
+
+#### Allowing Multiple Owners of Mutable Data
+
+A common way to use `RefCell<T>` is in combination with `Rc<T>`. Recall that `Rc<T>` lets you have multiple owners of some data, but it only gives immutable access to that data. If we have an `Rc<T>` that holds a `RefCell<T>`, we can get a value that can have multiple owners and that we can mutate.
+
+```rust
+#[derive(Debug)]
+enum List{
+    Cons(Rc<RefCell<i32>>, Rc<List>),
+    Nil,
+}
+
+use crate::List::{Cons, Nil};
+use std::cell::RefCell;
+use std::rc::Rc;
+
+fn main(){
+    let value = Rc::new(RefCell::new(5));
+    let a = Rc::new(Cons(Rc::clone(value), Rc::new(Nil)));
+    let b = Cons(Rc::new(RefCell::new(3)), Rc::clone(&a));
+    let c = Cons(Rc::new(RefCell::new(4)), Rc::clone(&a));
+
+    *value.borrow_mut() += 10;
+
+    println!("a after = {a:?}")
+    println!("b after = {b:?}")
+    println!("c after = {c:?}")
+}
+```
+
+Output:
+```bash
+$ cargo run
+   Compiling cons-list v0.1.0 (file:///projects/cons-list)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.63s
+     Running `target/debug/cons-list`
+a after = Cons(RefCell { value: 15 }, Nil)
+b after = Cons(RefCell { value: 3 }, Cons(RefCell { value: 15 }, Nil))
+c after = Cons(RefCell { value: 4 }, Cons(RefCell { value: 15 }, Nil))
+```
