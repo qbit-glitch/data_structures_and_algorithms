@@ -1,5 +1,5 @@
 /**
- * Leetcode-144: PreOrder Traversal of Binary Tree
+ * Leetcode-94: In-Order Traversal of Binary Tree
 */
 
 // Definition for a binary tree node.
@@ -69,30 +69,26 @@ fn print_tree(root: &Option<Rc<RefCell<TreeNode>>>, prefix: &str, is_left: bool)
 struct Solution;
 
 impl Solution {
-    pub fn preorder_traversal(root: Option<Rc<RefCell<TreeNode>>>) -> Vec<i32> {
-        let mut stack: Vec<Rc<RefCell<TreeNode>>> = Vec::new();
+    pub fn inorder_traversal(root: Option<Rc<RefCell<TreeNode>>>) -> Vec<i32> {
+        let mut ino: Vec<i32> = Vec::new();
+        Self::inorder_rec(&root.clone(), &mut ino);
+        ino
+    }
 
-        let mut pre: Vec<i32> = Vec::new();
-
-        if let Some(node) = root {
-            stack.push(node);
-        }
-
-        while let Some(node) = stack.pop() {
-            let n = node.borrow();
-            pre.push(n.val);
-
-            // push right first so that left is poped first
-            if let Some(right) = &n.right {
-                stack.push(Rc::clone(right));
+    pub fn inorder_rec(root: &Option<Rc<RefCell<TreeNode>>>, ino: &mut Vec<i32>) {
+        match root {
+            None => {},
+            Some(node) => {
+                let n = node.borrow();
+                if let Some(left) = &n.left {
+                    Self::inorder_rec(&Some(left.clone()), ino);
+                }
+                ino.push(n.val);
+                if let Some(right) = &n.right {
+                    Self::inorder_rec(&Some(right.clone()), ino);
+                }
             }
-            
-            if let Some(left) = &n.left {
-                stack.push(Rc::clone(left));
-            }
-            drop(n);
         }
-        pre
     }
 
 }
@@ -113,8 +109,7 @@ fn main() {
         print_tree(&r.right, "", false);
     }
 
-    let pre = Solution::preorder_traversal(root.clone());
-
-    println!("PreOrder Traversal: {:?}", pre);
+    let ino = Solution::inorder_traversal(root.clone());
+    println!("{ino:?}");
 }
 
