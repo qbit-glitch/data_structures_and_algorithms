@@ -5,6 +5,7 @@
 #include <iostream>
 #include <vector>
 #include <stack>
+#include <queue>
 using namespace std;
 
 
@@ -150,6 +151,38 @@ struct BinaryTree {
         reverse(res.begin(), res.end());
         return res;
     }
+
+    vector<T> levelOrder(int idx){
+        vector<T> res;
+        queue<int> que;
+
+        int level=1;
+        que.push(idx);
+
+        while(!que.empty()) {
+            int qs = que.size();
+            printf("Level %d : ", level);
+            int processed = 0;
+
+            while(!que.empty() and processed < qs) {
+                int item_idx = que.front();
+                que.pop();
+
+                cout << data[item_idx].value() << ", ";
+                res.push_back(data[item_idx].value());
+
+                if(2*item_idx <= size and data[2*item_idx].has_value())
+                    que.push(2*item_idx);
+                if(2*item_idx+1 <= size and data[2*item_idx+1].has_value())
+                    que.push(2*item_idx + 1);
+
+                processed += 1;
+            }
+            level += 1;
+            cout << endl;
+        }
+        return res;
+    }
 };
 
 
@@ -174,12 +207,18 @@ void printVector(vector<T> a, string s) {
 
 
 int main(){
-    BinaryTree<int> bt(5);
-    bt.insert(1);
+    BinaryTree<int> bt(10);
     bt.insert(2);
     bt.insert(3);
     bt.insert(4);
-    bt.insert(5);
+    bt.insert(6);
+    bt.insert(8);
+    bt.insert(10);
+    bt.insert(12);
+    bt.insert(14);
+    bt.insert(16);
+    bt.insert(18);
+
 
     printBinaryTree(bt);
 
@@ -202,6 +241,10 @@ int main(){
 
     vector<int> postOrderIterativeRes = bt.postOrderIterative(1);
     printVector(postOrderIterativeRes, "PostOrder Traversal"); 
+
+    vector<int> levelOrderTraversalRes = bt.levelOrder(1);
+    printVector(levelOrderTraversalRes, "Level Order Traversal");
+
 }
 
 
