@@ -8,9 +8,16 @@
 #include <queue>
 using namespace std;
 
+template <typename T>
+struct PreInPost{
+    vector<T> preOrder;
+    vector<T> inOrder;
+    vector<T> postOrder;
+};
+
+
 
 template <typename T>
-
 struct BinaryTree {
     vector<optional<T>> data;
     int size;
@@ -183,6 +190,41 @@ struct BinaryTree {
         }
         return res;
     }
+
+    PreInPost<T> singleTraversal(int idx) {
+        PreInPost<T> res;
+        stack<pair<int, int>> st;    // stores <index, frequency>
+
+        st.push({idx,1});
+
+        while(!st.empty()){
+            pair<int, int> item = st.top();
+            st.pop();
+
+            if(item.second == 1) {
+                res.preOrder.push_back(data[item.first].value());
+
+                st.push({item.first, item.second+1});
+
+                if(item.first * 2 <= size and data[2 * item.first].has_value())
+                    st.push({2 * item.first, 1});
+            }
+
+            else if(item.second == 2) {
+                res.inOrder.push_back(data[item.first].value());
+                st.push({item.first, item.second+1});
+
+                if(2*item.first+1 <= size and data[2*item.first + 1].has_value())
+                    st.push({2*item.first+1, 1});
+            }
+            else 
+                res.postOrder.push_back(data[item.first].value());
+        }
+        return res;
+    }
+    
+
+
 };
 
 
@@ -244,6 +286,11 @@ int main(){
 
     vector<int> levelOrderTraversalRes = bt.levelOrder(1);
     printVector(levelOrderTraversalRes, "Level Order Traversal");
+
+    PreInPost<int> res = bt.singleTraversal(1);
+    printVector(res.preOrder, "Preorder");
+    printVector(res.inOrder, "inorder");
+    printVector(res.postOrder, "postorder");
 
 }
 
