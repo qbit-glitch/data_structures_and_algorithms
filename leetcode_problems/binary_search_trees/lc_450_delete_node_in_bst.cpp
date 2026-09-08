@@ -1,0 +1,107 @@
+#include <iostream>
+using namespace std;
+
+struct TreeNode{
+    int val;
+    TreeNode* left;
+    TreeNode* right;
+    TreeNode() : val(0), left(nullptr), right(nullptr){}
+    TreeNode(int val): val(val), left(nullptr), right(nullptr){}
+    TreeNode(int val, TreeNode* left, TreeNode* right): val(val), left(left), right(right){}
+};
+
+void printBST(TreeNode* root, const string &prefix="", bool isLeft=false){
+    if(root == nullptr)
+        return;
+    
+    cout << prefix;
+    cout << (isLeft ? "|-- " : "'-- ");
+    cout << root->val << endl;
+
+    string childPrefix = prefix + (isLeft ? "|  " : "   ");
+    printBST(root->left, childPrefix, true);
+    printBST(root->right, childPrefix, false);
+}
+
+
+class Solution{
+    public:
+    TreeNode* deleteNode(TreeNode* root, int key) {
+        if(root == NULL){
+            return NULL;
+        }
+        if(root->val == key){
+            return helper(root);
+        }
+
+        TreeNode* dummy = root;
+        while(root != NULL){
+            if(root->val > key) {
+                if(root->left != NULL and root->left->val == key){
+                    root->left = helper(root->left);
+                    break;
+                }
+                else{
+                    root = root->left;
+                }
+            } else {
+                if(root->right != NULL and root->right->val == key){
+                    root->right = helper(root->right);
+                    break;
+                } else {
+                    root = root->right;
+                }
+            }
+        }
+        return dummy;
+    }
+
+    TreeNode* helper(TreeNode* root){
+        if(root->left == NULL){
+            return root->right;
+        } 
+        else if (root -> right == NULL){
+            return root->left;
+        }
+        TreeNode* rightChild = root->right;
+        TreeNode* lastRight = findLastRight(root->left);
+        lastRight->right = rightChild;
+        return root->left;
+    }
+
+    TreeNode* findLastRight(TreeNode* root){
+        if(root->right == NULL){
+            return root;
+        }
+        return findLastRight(root->right);
+    }
+};
+
+int main(){
+    TreeNode* root = new TreeNode(9);
+    root->left = new TreeNode(8);
+    root->right = new TreeNode(12);
+
+    root->left->left = new TreeNode(5);
+    root->left->left->left = new TreeNode(3);
+    root->left->left->right = new TreeNode(7);
+
+    root->left->left->left->left = new TreeNode(2);
+    root->left->left->left->right = new TreeNode(4);
+
+    root->left->left->right->left = new TreeNode(6);
+    root->left->left->right->right = new TreeNode(8);
+
+    root->left->left->left->left->left = new TreeNode(1);
+
+    root->right->left = new TreeNode(10);
+    root->right->right = new TreeNode(13);
+    root->right->right->left = new TreeNode(11);
+
+    printBST(root);
+
+    Solution sol;
+    int x = 8;
+    TreeNode* newRoot = sol.deleteNode(root, x);
+    printBST(newRoot);
+}
