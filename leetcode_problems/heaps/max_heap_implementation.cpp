@@ -2,12 +2,13 @@
  * Max Heap Implementation
 */
 
-#include <bits/stdc++.h>
+#include <vector>
+#include <iostream>
 using namespace std;
 
 /** Some Notes:
  * 1. In 0-based indexing: leafnodes: 2i+1, 2i+2 | parentNode = (i-1)/2
- * 2. 
+ * 2. in 1-based indexing: leafnodes : 2i, 2i+1 | parentNode = i/2
 */
 
 
